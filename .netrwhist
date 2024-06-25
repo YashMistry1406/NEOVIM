@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =4
+let g:netrw_dirhist_4='/home/thermodynamics/.config/nvim/lua/yash'
+let g:netrw_dirhist_3='/home/thermodynamics/.config/nvim/lua'
+let g:netrw_dirhist_2='/home/thermodynamics/.config/nvim'
+let g:netrw_dirhist_1='/home/thermodynamics/.config/nvim/plugin'
+let g:netrw_dirhist_0='/home/thermodynamics/.config/nvim'
+let g:netrw_dirhist_9='/home/thermodynamics/.config/nvim/after'
+let g:netrw_dirhist_8='/home/thermodynamics/.config/nvim/after/plugin'
+let g:netrw_dirhist_7='/home/thermodynamics/.config/nvim/after'
+let g:netrw_dirhist_6='/home/thermodynamics/.config/nvim'
+let g:netrw_dirhist_5='/home/thermodynamics/.config/nvim/plugin'
