@@ -18,7 +18,7 @@ return require('packer').startup(function(use)
 -- or                            , branch = '0.1.x',
   requires = { {'nvim-lua/plenary.nvim'} }
 }
-use { "ellisonleao/gruvbox.nvim" }
+    use { "ellisonleao/gruvbox.nvim" }
     use("theprimeagen/harpoon")
     use("mbbill/undotree")
     use("tpope/vim-fugitive")
@@ -94,4 +94,34 @@ use({
   requires = "nvim-treesitter/nvim-treesitter",
 })
 
+use 'mfussenegger/nvim-dap'
+
+-- Packer
+use "olimorris/onedarkpro.nvim"
+
+use {
+  "loctvl842/monokai-pro.nvim",
+  config = function()
+    require("monokai-pro").setup()
+  end
+}
+-- NVIM TREE file browser 
+use {
+  'nvim-tree/nvim-tree.lua',
+  requires = {
+    'nvim-tree/nvim-web-devicons', -- optional
+  },
+}
+
+use {
+  'rmagatti/auto-session',
+  config = function()
+    require("auto-session").setup {
+      suppressed_dirs = { "~/", "~/Projects", "~/Downloads", "/"},
+    }
+  end
+}
+
+--use "marko-cerovac/material.nvim"
+--use { "arturgoms/moonbow.nvim" }
   end)

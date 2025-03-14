@@ -23,4 +23,42 @@ require'nvim-treesitter.configs'.setup {
     -- Instead of true it can also be a list of languages
     additional_vim_regex_highlighting = false,
   },
+  statusline = {
+
+    indicator_size = 100,
+    type_patterns = {'class', 'function', 'method'},
+    transform_fn = function(line, _node) return line:gsub('%s*[%[%(%{]*%s*$', '') end,
+    separator = ' -> ',
+    allow_duplicates = false
+  },
+
 }
+
+local ts_utils = require('nvim-treesitter.ts_utils')
+local M = {}
+-- Function to get the current function name under the cursor
+function M.get_current_function_name()
+  -- Get the node under the cursor
+  local current_node = ts_utils.get_node_at_cursor()
+
+  -- If no node is found, return an empty string
+  if not current_node then
+    return ""
+  end
+while current_node do
+    -- If the current node is a function_declaration or similar
+    if current_node:type() == 'function_declaration' then
+      -- Get the first child node, which is usually the function name
+      local func_name_node = current_node:child(1)
+      -- Return the function name text
+      return vim.treesitter.get_node_text(func_name_node, 0)
+    end
+
+    -- Move to the parent node (for cases like inside a function call)
+    current_node = current_node:parent()
+  end
+
+  -- Return an empty string if no function declaration node is found
+  return ""
+end
+return M

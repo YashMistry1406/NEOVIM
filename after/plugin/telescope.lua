@@ -10,3 +10,6 @@ vim.keymap.set('n', '<leader>ps', function ()
 end)
 
 
+vim.keymap.set('n', '<leader>ds', builtin.lsp_document_symbols, {})
+
+
