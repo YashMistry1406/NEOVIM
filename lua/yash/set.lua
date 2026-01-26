@@ -1,5 +1,7 @@
+vim.o.number = true          -- Show absolute line number for the current line
+vim.o.relativenumber = true  -- Show relative line numbers for other lines
 
-vim.opt.relativenumber = true
+--vim.opt.relativenumber = true
 
 vim.g.loaded_netrwPlugin = 1
 vim.g.loaded_netrw = 1
