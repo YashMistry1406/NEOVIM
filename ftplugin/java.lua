@@ -145,14 +145,14 @@ local config = {
   },
 }
 
+-- Format on save (Java only)
+ vim.api.nvim_create_autocmd("BufWritePre", {
+   buffer = 0,
+   callback = function()
+     vim.lsp.buf.format({ async = false })
+   end,
+ })
+
 -- Start or attach
 jdtls.start_or_attach(config)
-
--- Format on save (Java only)
-vim.api.nvim_create_autocmd("BufWritePre", {
-  buffer = 0,
-  callback = function()
-    vim.lsp.buf.format({ async = false })
-  end,
-})
 

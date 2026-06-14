@@ -53,7 +53,7 @@ vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } e
 
 
 
- vim.keymap.set('n', '<leader>wr', '<cmd>SessionSearch<CR>',opts)
+ vim.keymap.set('n', '<leader>wr', '<cmd>AutoSession search<CR>',opts)
 
 
 

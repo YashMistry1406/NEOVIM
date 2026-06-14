@@ -11,5 +11,17 @@ end)
 
 
 vim.keymap.set('n', '<leader>ds', builtin.lsp_document_symbols, {})
+require('telescope').setup{
+  defaults = {
+    mappings = {
+      i = {
+        ["<M-d>"] = require('telescope.actions').delete_buffer,
+      },
+      n = {
+        ["<M-d>"] = require('telescope.actions').delete_buffer,
+      },
+    },
+  },
+}
 
 
