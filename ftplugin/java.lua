@@ -64,95 +64,167 @@
 --    --root_dir = vim.fs.dirname(vim.fs.find({'.gradlew', '.git', 'mvnw'}, { upward = true })[1]),
 --require('jdtls').start_or_attach(config)
 
-local jdtls = require("jdtls")
-local home = vim.env.HOME
+-- local jdtls = require("jdtls")
+-- local home = vim.env.HOME
+--
+-- -- Detect project root
+-- local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" }
+-- local root_dir = require("jdtls.setup").find_root(root_markers)
+-- if root_dir == nil then
+--   return
+-- end
+--
+-- -- Workspace directory (per project)
+-- local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
+-- local workspace_dir = home .. "/.local/share/jdtls-workspace/" .. project_name
+--
+-- -- on_attach: keymaps + formatting
+-- local on_attach = function(client, bufnr)
+--   local opts = { noremap = true, silent = true, buffer = bufnr }
+--
+--   -- Format
+--   vim.keymap.set("n", "<space>f", function()
+--     vim.lsp.buf.format({ async = true })
+--   end, vim.tbl_extend("force", opts, { desc = "Format file" }))
+--
+--   -- Code actions
+--   vim.keymap.set("v", "<space>ca", function()
+--     vim.lsp.buf.range_code_action()
+--   end, vim.tbl_extend("force", opts, { desc = "Code actions" }))
+--
+--   -- jdtls extras
+--   vim.keymap.set("n", "<space>co", jdtls.organize_imports,
+--     vim.tbl_extend("force", opts, { desc = "Organize imports" }))
+--
+--   vim.keymap.set("n", "<space>ev", jdtls.extract_variable,
+--     vim.tbl_extend("force", opts, { desc = "Extract variable" }))
+--
+--   vim.keymap.set("n", "<space>ec", jdtls.extract_constant,
+--     vim.tbl_extend("force", opts, { desc = "Extract constant" }))
+--
+--   vim.keymap.set("v", "<space>em", function()
+--     jdtls.extract_method(true)
+--   end, vim.tbl_extend("force", opts, { desc = "Extract method" }))
+-- end
+--
+-- -- JDTLS command
+-- local cmd = {
+--   "java",
+--   "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+--   "-Dosgi.bundles.defaultStartLevel=4",
+--   "-Declipse.product=org.eclipse.jdt.ls.core.product",
+--   "-Dlog.level=ALL",
+--   "-Xmx1G",
+--   "--add-opens", "java.base/java.util=ALL-UNNAMED",
+--   "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+--   "-javaagent:" .. home .. "/.local/share/nvim/mason/packages/jdtls/lombok.jar",
+--   "-jar", home .. "/.local/share/nvim/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_1.6.900.v20240613-2009.jar",
+--   "-configuration", home .. "/.local/share/nvim/mason/packages/jdtls/config_linux",
+--   "-data", workspace_dir,
+-- }
+--
+-- -- Final config
+-- local config = {
+--   cmd = cmd,
+--   root_dir = root_dir,
+--   on_attach = on_attach,
+--
+--   settings = {
+--     java = {
+--       format = {
+--         settings = {
+--           url = home .. "/.config/java/eclipse-java-formatter.xml",
+--           profile = "Custom",
+--         },
+--       },
+--     },
+--   },
+--
+--   init_options = {
+--     bundles = {},
+--   },
+-- }
+--
+-- -- Format on save (Java only)
+--  vim.api.nvim_create_autocmd("BufWritePre", {
+--    buffer = 0,
+--    callback = function()
+--      vim.lsp.buf.format({ async = false })
+--    end,
+--  })
+--
+-- -- Start or attach
+-- jdtls.start_or_attach(config)
 
--- Detect project root
-local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" }
-local root_dir = require("jdtls.setup").find_root(root_markers)
-if root_dir == nil then
+local root_markers = { ".git", "pom.xml", "build.gradle", "mvnw", "gradlew" }
+local root_dir = vim.fs.root(0, root_markers)
+
+if not root_dir then
   return
 end
 
--- Workspace directory (per project)
-local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
-local workspace_dir = home .. "/.local/share/jdtls-workspace/" .. project_name
+-- 1. Paths configuration
+local mason_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
 
--- on_attach: keymaps + formatting
-local on_attach = function(client, bufnr)
-  local opts = { noremap = true, silent = true, buffer = bufnr }
-
-  -- Format
-  vim.keymap.set("n", "<space>f", function()
-    vim.lsp.buf.format({ async = true })
-  end, vim.tbl_extend("force", opts, { desc = "Format file" }))
-
-  -- Code actions
-  vim.keymap.set("v", "<space>ca", function()
-    vim.lsp.buf.range_code_action()
-  end, vim.tbl_extend("force", opts, { desc = "Code actions" }))
-
-  -- jdtls extras
-  vim.keymap.set("n", "<space>co", jdtls.organize_imports,
-    vim.tbl_extend("force", opts, { desc = "Organize imports" }))
-
-  vim.keymap.set("n", "<space>ev", jdtls.extract_variable,
-    vim.tbl_extend("force", opts, { desc = "Extract variable" }))
-
-  vim.keymap.set("n", "<space>ec", jdtls.extract_constant,
-    vim.tbl_extend("force", opts, { desc = "Extract constant" }))
-
-  vim.keymap.set("v", "<space>em", function()
-    jdtls.extract_method(true)
-  end, vim.tbl_extend("force", opts, { desc = "Extract method" }))
+-- 2. DYNAMICALLY FIND THE LAUNCHER JAR
+-- This prevents the "Unable to access jarfile" crash when jdtls updates!
+local launcher_jar = ""
+local plugins_dir = mason_path .. "/plugins/"
+if vim.fn.isdirectory(plugins_dir) == 1 then
+  local files = vim.fn.glob(plugins_dir .. "org.eclipse.equinox.launcher_*.jar", false, true)
+  if #files > 0 then
+    launcher_jar = files[1]
+  end
 end
 
--- JDTLS command
-local cmd = {
-  "java",
-  "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-  "-Dosgi.bundles.defaultStartLevel=4",
-  "-Declipse.product=org.eclipse.jdt.ls.core.product",
-  "-Dlog.level=ALL",
-  "-Xmx1G",
-  "--add-opens", "java.base/java.util=ALL-UNNAMED",
-  "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-  "-javaagent:" .. home .. "/.local/share/nvim/mason/packages/jdtls/lombok.jar",
-  "-jar", home .. "/.local/share/nvim/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_1.6.900.v20240613-2009.jar",
-  "-configuration", home .. "/.local/share/nvim/mason/packages/jdtls/config_linux",
-  "-data", workspace_dir,
-}
+-- Determine the proper configuration directory based on your OS
+local os_config = "linux"
+if vim.fn.has("mac") == 1 then
+  os_config = "mac"
+elseif vim.fn.has("win32") == 1 then
+  os_config = "win"
+end
 
--- Final config
-local config = {
-  cmd = cmd,
-  root_dir = root_dir,
-  on_attach = on_attach,
+local cmp_lsp_status, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+local capabilities = cmp_lsp_status and cmp_nvim_lsp.default_capabilities() or vim.lsp.protocol.make_client_capabilities()
 
-  settings = {
-    java = {
-      format = {
-        settings = {
-          url = home .. "/.config/java/eclipse-java-formatter.xml",
-          profile = "Custom",
-        },
+-- 3. Only run if we actually successfully located the launcher jar
+if launcher_jar ~= "" then
+  local config = {
+    cmd = {
+      "java", -- Execute using your system's java runtime binary
+      "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+      "-Dosgi.bundles.defaultStartLevel=4",
+      "-Declipse.product=org.eclipse.jdt.ls.core.product",
+      "-Dlog.level=ALL",
+      "-Xmx1g",
+      "--add-modules=ALL-SYSTEM",
+      "--add-opens", "java.base/java.util=ALL-UNNAMED",
+      "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+      
+      -- Pointing directly to our dynamically resolved launcher
+      "-jar", launcher_jar,
+      "-configuration", mason_path .. "/config_" .. os_config,
+      "-data", vim.fn.expand("~/.cache/jdtls-workspace/") .. vim.fn.fnamemodify(root_dir, ":p:h:t")
+    },
+    root_dir = root_dir,
+    capabilities = capabilities,
+    settings = {
+      java = {
+        signatureHelp = { enabled = true },
       },
     },
-  },
+  }
 
-  init_options = {
-    bundles = {},
-  },
-}
-
--- Format on save (Java only)
- vim.api.nvim_create_autocmd("BufWritePre", {
-   buffer = 0,
-   callback = function()
-     vim.lsp.buf.format({ async = false })
-   end,
- })
-
--- Start or attach
-jdtls.start_or_attach(config)
-
+  local status, jdtls = pcall(require, "jdtls")
+  if status then
+    jdtls.start_or_attach(config)
+  else
+    local lsp_status, lspconfig = pcall(require, "lspconfig")
+    if lsp_status then
+      lspconfig.jdtls.setup(config)
+    end
+  end
+else
+  vim.notify("JDTLS Launcher JAR could not be resolved in Mason paths.", vim.log.levels.ERROR)
+end

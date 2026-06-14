@@ -14,22 +14,14 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end
 vim.opt.rtp:prepend(lazypath)
-
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
 -- Setup lazy.nvim
 require("lazy").setup({
   spec = {
-    -- We explicitly define the plugins here so lazy installs them,
-    -- completely avoiding the automatic folder scan crash.
-    { "neovim/nvim-lspconfig" },
-    { "williamboman/mason.nvim" },
-    { "williamboman/mason-lspconfig.nvim" },
-    { "hrsh7th/nvim-cmp" },
-    { "hrsh7th/cmp-nvim-lsp" },
-    { "saadparwaiz1/cmp_luasnip" },
-    { "L3MON4D3/LuaSnip" },
+    -- lsp.lua in plugins/ handles: nvim-lspconfig, mason, mason-lspconfig,
+    -- nvim-cmp, cmp-nvim-lsp, cmp_luasnip, LuaSnip — removed bare entries here
     { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
     { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
     { "nvim-telescope/telescope-file-browser.nvim" },
@@ -44,7 +36,7 @@ require("lazy").setup({
     { "nvim-tree/nvim-tree.lua" },
     { "rmagatti/auto-session" },
     { "mfussenegger/nvim-jdtls" },
-    {import = "plugins"}
+    { import = "plugins" },
   },
   install = { colorscheme = { "habamax" } },
   checker = { enabled = true },
